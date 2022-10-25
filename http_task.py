@@ -1,43 +1,46 @@
 import requests
 
-url = 'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/all.json'
-response = requests.get(url)
-some_text = (response.text, 'lxml')
-name = []
-intelligence = []
-for i in some_text:
-    for data in i:
-        some_data = str(data).split('\n')
-        for int in some_data:
-            if '"name":' in int:
-                some_data = int[13:].replace('",', '')
-                name.append(some_data)
-            if '"intelligence":' in int:
-                inte = int[22:].replace(',', '')
-                intelligence.append(int(inte))
+import requests
 
-hero = ['Hulk', 'Captain America', 'Thanos']
-hero_intel = []
-count = 0
-while count < len(hero):
-    hero_intel.append(intelligence[name.index(hero[count])])
-    count += 1
 
-print(f'Среди Hulk, Captain America и Thanos самым умным является '
-      f'{hero[hero_intel.index(max(hero_intel))]} с интелектом {max(hero_intel)}')
+def heroes_requests():
+    heroes_intelligence = {}
+    url = "https://akabab.github.io/superhero-api/api/all.json"
+    response = requests.get(url)
+    all_heroes = response.json()
+    for hero in all_heroes:
+        if hero['name'] in ['Hulk', 'Captain America', 'Thanos']:
+            heroes_intelligence[hero['name']] = hero['powerstats']['intelligence']
+    print(max(heroes_intelligence, key=heroes_intelligence.get))
 
-vvod = input('Введите имя персонажа чтобы узнать уровень его интелекта:')
-for i in name:
-    if vvod in i:
-        index_char = name.index(i)
-        print(f'Интелект персонажа {i} = {intelligence[index_char]}')
-        break
 
-import yadisk
+if __name__ == '__main__':
+    heroes_requests()
 
-y = yadisk.YaDisk(token="y0_AgAAAABk33T_AADLWwAAAADP0R4mdGLnpH3gR0a8dvtGvAxmfqPDS0Q")
-vvod = input('Введите путь до файла который необходимо загрузить: ')
 
-with open(vvod, "rb") as f:
-    split_file = vvod.split('/')
-    y.upload(f, split_file[-1])
+class YaUploader:
+    def __init__(self, token: str):
+        self.token = token
+
+    def get_headers(self):
+        return {"Content-type": 'application/json', 'Authorization': f'OAuth {self.token}'}
+
+
+
+    def upload(self, file_path: str):
+        url = "https://cloud-api.yandex.net/v1/disk/resources/upload"
+        params = {'path': file_path, 'overwrite': 'true'}
+        headers = self.get_headers()
+        response = requests.get(url, headers=headers, params=params)
+        response = response.json()
+
+        href = response.get("href", "")
+        response.put(href, data=open('yandex_disk_task.txt', 'rb'))
+
+
+
+if __name__ == '__main__':
+    path_to_file = "Yandex_disk_task/hometask_to_yadisk.txt"
+    token = input('Введите токен доступа : ')
+    uploader = YaUploader(token)
+    result = uploader.upload(path_to_file)

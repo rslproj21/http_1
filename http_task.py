@@ -1,7 +1,5 @@
 import requests
 
-import requests
-
 
 def heroes_requests():
     heroes_intelligence = {}
